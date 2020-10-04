@@ -55,6 +55,8 @@ main() {
     // Check for internal shell commands, such as exit
     if(internal_command(args))
       continue;
+    
+    logical_operators(args); 
 
     // Check for an ampersand
     block = (ampersand(args) == 0);
@@ -96,12 +98,17 @@ main() {
   }
 }
 
-int logical_operators(char ** args) {
+int logical_operators(char **args) {
 	int i;
+	int j;
 
 	for(i = 1; args[i] != NULL; i++){
+
 		if(args[i][0] == '&' && args[i+1][0] == '&'){
-				
+			free(args[i]);
+			for(j = i; args[j-2] != NULL; j++) {
+				args[j] = args[j+3];
+      			}
 		}
 	}
 }

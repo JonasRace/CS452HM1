@@ -1,0 +1,17 @@
+this is a set of processes
+For scheduling 2
+For scheduling 1
+For scheduling 8
+Pid Burst Arrval Pri
+1   1     1179   72
+2   38    2659   49
+3   78    543    2
+3   77    543    2
+4   91    5026   42
+5   16    6118   59
+6   1     2296   87
+7   66    1591   60
+8   -8    3023   16
+9   41    -1     33
+10  20    5567   39
+
