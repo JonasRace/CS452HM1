@@ -96,6 +96,16 @@ main() {
   }
 }
 
+int logical_operators(char ** args) {
+	int i;
+
+	for(i = 1; args[i] != NULL; i++){
+		if(args[i][0] == '&' && args[i+1][0] == '&'){
+				
+		}
+	}
+}
+
 /*
  * Check for ampersand as the last argument
  */
@@ -157,7 +167,10 @@ int do_command(char **args, int block,
     if(input)
       freopen(input_filename, "r", stdin);
 
-    if(output)
+    if(output == 2)
+      freopen(output_filename, "a", stdout);
+
+    if(output == 1)
       freopen(output_filename, "w+", stdout);
 
     // Execute the command
@@ -171,6 +184,7 @@ int do_command(char **args, int block,
     printf("Waiting for child, pid = %d\n", child_id);
     result = waitpid(child_id, &status, 0);
   }
+
 }
 
 /*
@@ -215,22 +229,37 @@ int redirect_output(char **args, char **output_filename) {
   for(i = 0; args[i] != NULL; i++) {
 
     // Look for the >
-    if(args[i][0] == '>') {
-      free(args[i]);
+    if(args[i][0] == '>' && args[i+1][0] == '>') {
+      free(args[i]);      
+     
 
       // Get the filename 
-      if(args[i+1] != NULL) {
-	*output_filename = args[i+1];
+      if(args[i+2] != NULL) {
+	*output_filename = args[i+2];
       } else {
 	return -1;
       }
 
       // Adjust the rest of the arguments in the array
-      for(j = i; args[j-1] != NULL; j++) {
-	args[j] = args[j+2];
+      for(j = i; args[j-2] != NULL; j++) {
+	args[j] = args[j+3];
       }
 
-      return 1;
+      return 2;
+    }
+    else if(args[i][0] == '>'){
+	free(args[i]);
+
+	if(args[i+1] != NULL) {
+		*output_filename = args[i+1];
+		
+	} else{
+	  return -1;
+	 }
+	 for(j = i; args[j-1] != NULL; j++) {
+	 	args[j] = args[j+2];
+	}
+	return 1;
     }
   }
 
