@@ -37,17 +37,22 @@ main() {
   int input;
   char *output_filename;
   char *input_filename;
+  int lo_flag = 0;
 
   // Set up the signal handler
   sigset(SIGCHLD, sig_handler);
 
   // Loop forever
   while(1) {
+    
+    if(lo_flag == 0){
+
 
     // Print out the prompt and get the input
     printf("->");
     args = getaline();
-
+    }
+   
     // No input, continue
     if(args[0] == NULL)
       continue;
@@ -56,7 +61,7 @@ main() {
     if(internal_command(args))
       continue;
     
-    logical_operators(args); 
+    lo_flag = logical_operators(args); 
 
     // Check for an ampersand
     block = (ampersand(args) == 0);
@@ -95,9 +100,31 @@ main() {
     do_command(args, block, 
 	       input, input_filename, 
 	       output, output_filename);
+            
+    
   }
 }
 
+int free_shift(char **args){
+	int i;
+
+	for(i = 0; args[i][0] != '&' && args[i+1][0] != '&';){
+		free(args[i]);
+		args[i] = NULL;
+	}
+	free(args[i+1]);
+	args[i+1] = NULL;
+	
+	int k = 0;
+	int j;
+	for(j = i+2;args[j] != NULL; j++){
+		args[k] = args[j];
+		free(args[j]);
+		args[j] = NULL;
+		k++;
+	}
+
+}
 int logical_operators(char **args) {
 	int i;
 	int j;
@@ -105,12 +132,10 @@ int logical_operators(char **args) {
 	for(i = 1; args[i] != NULL; i++){
 
 		if(args[i][0] == '&' && args[i+1][0] == '&'){
-			free(args[i]);
-			for(j = i; args[j-2] != NULL; j++) {
-				args[j] = args[j+3];
-      			}
+			args[i] = NULL;
+			return 1;
 		}
-	}
+	}return 0;
 }
 
 /*
@@ -154,6 +179,7 @@ int do_command(char **args, int block,
   int result;
   pid_t child_id;
   int status;
+  int j;
 
   // Fork the child process
   child_id = fork();
@@ -182,7 +208,6 @@ int do_command(char **args, int block,
 
     // Execute the command
     result = execvp(args[0], args);
-
     exit(-1);
   }
 
