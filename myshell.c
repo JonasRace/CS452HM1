@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 extern char **getaline();
+struct sigaction sig_act;
 
 /*
  * Handle exit signals from child processes
@@ -22,7 +23,11 @@ void sig_handler(int signal) {
   int status;
   int result = wait(&status);
 
-  printf("Wait returned %d\n", result);
+	if(signal == SIGCHLD){
+		waitpid(-1, &status, WNOHANG);
+	}
+	printf("Wait returned %d\n", result);
+
 }
 
 /*
@@ -37,21 +42,21 @@ main() {
   int input;
   char *output_filename;
   char *input_filename;
-  int lo_flag = 0;
 
   // Set up the signal handler
-  sigset(SIGCHLD, sig_handler);
+	memset(&sig_act, 0, sizeof(sig_act));
+	sig_act.sa_sigaction = sig_handler;
+	sig_act.sa_flags = SA_RESTART;
+
+  sigaction(SIGCHLD, &sig_act, NULL);
 
   // Loop forever
   while(1) {
-    
-    if(lo_flag == 0){
-
 
     // Print out the prompt and get the input
     printf("->");
     args = getaline();
-    }
+ 
    
     // No input, continue
     if(args[0] == NULL)
@@ -60,8 +65,6 @@ main() {
     // Check for internal shell commands, such as exit
     if(internal_command(args))
       continue;
-    
-    lo_flag = logical_operators(args); 
 
     // Check for an ampersand
     block = (ampersand(args) == 0);
@@ -95,48 +98,14 @@ main() {
       printf("Redirecting output to: %s\n", output_filename);
       break;
     }
-
-    // Do the command
-    do_command(args, block, 
-	       input, input_filename, 
-	       output, output_filename);
-            
     
+    do_command(args, block,input, input_filename, 
+	  output, output_filename); 
+   
+
   }
 }
 
-int free_shift(char **args){
-	int i;
-
-	for(i = 0; args[i][0] != '&' && args[i+1][0] != '&';){
-		free(args[i]);
-		args[i] = NULL;
-	}
-	free(args[i+1]);
-	args[i+1] = NULL;
-	
-	int k = 0;
-	int j;
-	for(j = i+2;args[j] != NULL; j++){
-		args[k] = args[j];
-		free(args[j]);
-		args[j] = NULL;
-		k++;
-	}
-
-}
-int logical_operators(char **args) {
-	int i;
-	int j;
-
-	for(i = 1; args[i] != NULL; i++){
-
-		if(args[i][0] == '&' && args[i+1][0] == '&'){
-			args[i] = NULL;
-			return 1;
-		}
-	}return 0;
-}
 
 /*
  * Check for ampersand as the last argument
@@ -144,8 +113,9 @@ int logical_operators(char **args) {
 int ampersand(char **args) {
   int i;
 
-  for(i = 1; args[i] != NULL; i++) ;
-
+  for(i = 1; args[i] != NULL; i++);
+  
+  //checking that the ampersand exists, if so return a 1.
   if(args[i-1][0] == '&') {
     free(args[i-1]);
     args[i-1] = NULL;
@@ -195,7 +165,13 @@ int do_command(char **args, int block,
   }
 
   if(child_id == 0) {
-
+		if(!block){
+			
+			setpgid(0,0);
+			execvp(args[0], args);
+			exit(0);
+		}
+    
     // Set up redirection in the child process
     if(input)
       freopen(input_filename, "r", stdin);
@@ -214,7 +190,7 @@ int do_command(char **args, int block,
   // Wait for the child process to complete, if necessary
   if(block) {
     printf("Waiting for child, pid = %d\n", child_id);
-    result = waitpid(child_id, &status, 0);
+    result = waitpid(child_id, &status, 0); 
   }
 
 }
