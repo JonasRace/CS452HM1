@@ -21,12 +21,11 @@ struct sigaction sig_act;
  */
 void sig_handler(int signal) {
   int status;
-  int result = wait(&status);
+  int result;
 
-	if(signal == SIGCHLD){
+	if(result != -1){
 		waitpid(-1, &status, WNOHANG);
 	}
-	printf("Wait returned %d\n", result);
 
 }
 
@@ -46,6 +45,10 @@ main() {
   // Set up the signal handler
 	memset(&sig_act, 0, sizeof(sig_act));
 	sig_act.sa_sigaction = sig_handler;
+	if(sigaction(SIGHUP, &sig_act, NULL) == -1) {
+		//Some sort of perror()
+
+	}
 	sig_act.sa_flags = SA_RESTART;
 
   sigaction(SIGCHLD, &sig_act, NULL);
@@ -165,10 +168,10 @@ int do_command(char **args, int block,
   }
 
   if(child_id == 0) {
-		if(!block){
-			
+		if(!block){ 
 			setpgid(0,0);
 			execvp(args[0], args);
+			wait(-1, &status, WNOHANG);
 			exit(0);
 		}
     
