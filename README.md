@@ -20,7 +20,7 @@ makefile - This is the makefile that compiles all the necessary files and output
 
 ***How to Run***
 
-To compile - In your terminal, navigate to the folder where all of the above files are located. Then, type "make". This will run the makefile which runs the following command:
+To compile - In your terminal, navigate to the folder where all of the above files are located. Then, **type "make"**. This will run the makefile which runs the following command:
 		
 		gcc myshell.c lex.yy.c -o shell -lfl
 
@@ -28,6 +28,10 @@ After the makefile is executed, the shell program can be run using the following
 
 		./shell
 
+
+***Issues***
+
+Currently, we have pipes mostly working, only encountering problems when input redirection is involved. We also could not figure out how to implement logical operators or command separators. We have methods to check for them, but that is the extent that we managed to reach. Anything we tried after just broke the program.
 	
 
 	
